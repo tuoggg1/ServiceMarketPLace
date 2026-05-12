@@ -96,19 +96,19 @@ export const authApi = {
   
   // Customer login
   loginCustomer: async (email, password) => {
-    const response = await api.post('/auth/login/customer', { email, password })
+    const response = await api.post('/auth/login', { email, password, userType: 'customer' })
     return response.data
   },
   
   // Provider login
   loginProvider: async (email, password) => {
-    const response = await api.post('/auth/login/provider', { email, password })
+    const response = await api.post('/auth/login', { email, password, userType: 'provider' })
     return response.data
   },
   
   // Admin login
   loginAdmin: async (email, password) => {
-    const response = await api.post('/auth/login/admin', { email, password })
+    const response = await api.post('/auth/login', { email, password, userType: 'admin' })
     return response.data
   },
   
