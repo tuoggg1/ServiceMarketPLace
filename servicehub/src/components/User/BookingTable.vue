@@ -1,6 +1,10 @@
-<!-- component note: this component keeps the original service hub layout and is annotated for easier tutor explanation. -->
+<script setup>
+// BookingTable.vue: reusable table for bookings if you want to display requests inside other pages later.
+defineProps({ bookings: { type: Array, default: () => [] }, admin: { type: Boolean, default: false } })
+defineEmits(['change-status'])
+</script>
 <template>
-  <div class="table-wrap">
+  <div class="responsive-table">
     <table>
       <thead>
         <tr>
@@ -10,7 +14,7 @@
           <th>Payment</th>
           <th>Total</th>
           <th>Status</th>
-          <th v-if="admin">Admin action</th>
+          <th v-if="admin">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -20,28 +24,17 @@
           <td>{{ booking.date }} {{ booking.time }}</td>
           <td>{{ booking.payment }}</td>
           <td>৳{{ booking.total }}</td>
-          <td><span class="status-pill">{{ booking.status }}</span></td>
-          <td v-if="admin">
-            <select :value="booking.status" @change="$emit('change-status', { id: booking.id, status: $event.target.value })">
+          <td><span :class="['status-pill', booking.status.toLowerCase().replace(' ', '-')]">{{ booking.status }}</span>
+          </td>
+          <td v-if="admin"><select :value="booking.status"
+              @change="$emit('change-status', { id: booking.id, status: $event.target.value })">
               <option>Pending</option>
               <option>Accepted</option>
               <option>Completed</option>
               <option>Cancelled</option>
-            </select>
-          </td>
+            </select></td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
-
-<script>
-export default {
-  name: 'BookingTable',
-  props: {
-    bookings: { type: Array, required: true },
-    admin: { type: Boolean, default: false }
-  },
-  emits: ['change-status']
-}
-</script>

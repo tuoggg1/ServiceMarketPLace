@@ -1369,3 +1369,113 @@ td small {
   border-color: var(--line);
   color: var(--text);
 }
+
+/* backend-ready workflow additions */
+.workflow-note {
+  padding: 16px 18px;
+  border: 1px dashed var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--radius-md);
+  color: var(--brand-dark);
+  font-weight: 800;
+  margin: 18px 0
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px
+}
+
+.choice-card {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left
+}
+
+.choice-card h3 {
+  margin: 0 0 8px
+}
+
+.choice-card p {
+  color: var(--muted);
+  line-height: 1.6
+}
+
+.inline-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center
+}
+
+.field-help {
+  font-size: 12px;
+  color: var(--muted)
+}
+
+.badge-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap
+}
+
+.provider-select {
+  min-width: 220px
+}
+
+.chat-box {
+  display: grid;
+  gap: 12px
+}
+
+.chat-message {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: var(--surface-soft)
+}
+
+.chat-message strong {
+  display: block;
+  margin-bottom: 4px
+}
+
+.chat-compose {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px
+}
+
+.service-image-placeholder {
+  height: 260px;
+  background: linear-gradient(135deg, var(--brand-soft), #fff);
+  display: grid;
+  place-items: center;
+  color: var(--brand);
+  font-weight: 950
+}
+
+.notice-list {
+  display: grid;
+  gap: 12px
+}
+
+.notice {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface)
+}
+
+@media(max-width:760px) {
+  .choice-grid {
+    grid-template-columns: 1fr
+  }
+
+  .chat-compose {
+    grid-template-columns: 1fr
+  }
+}
