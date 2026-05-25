@@ -1,22 +1,13 @@
 <script setup>
-import { computed, ref } from 'vue'
+defineProps({
+  customer: Object,
+  requests: {
+    type: Array,
+    default: () => []
+  }
+})
 
-// Customer dashboard: tracks submitted requests and controlled chat approval flow.
-const props = defineProps({ currentUser: Object, requests: Array, chatApprovals: Array, messages: Array })
-const emit = defineEmits(['go', 'request-chat', 'send-message'])
-const messageByRequest = ref({})
-const myRequests = computed(() => props.requests.filter(r => r.customerId === props.currentUser?.id))
-
-function chatStatus(requestId) {
-  return props.chatApprovals.find(c => c.requestId === requestId)?.status || 'not-requested'
-}
-
-function submitMessage(requestId) {
-  const message = messageByRequest.value[requestId]
-  if (!message) return
-  emit('send-message', { requestId, senderRole: 'customer', message })
-  messageByRequest.value[requestId] = ''
-}
+defineEmits(['request-another', 'view-tracking'])
 </script>
 
 <template>
@@ -24,33 +15,55 @@ function submitMessage(requestId) {
     <div class="dashboard-hero clean-card">
       <div>
         <p class="eyebrow">Customer dashboard</p>
-        <h2>Welcome, {{ currentUser?.name }}</h2>
-        <p class="muted">View request status and request admin approval before chatting with a provider.</p>
-      </div><button class="primary" @click="$emit('go', 'home')">Request another service</button>
+        <h2>Welcome, {{ customer?.name }}</h2>
+        <p class="muted">View previous requests, track progress, and request another Rajshahi service.</p>
+      </div>
+
+      <button class="primary" @click="$emit('request-another')">
+        Request another service
+      </button>
     </div>
-    <div v-if="myRequests.length === 0" class="empty-state">No service requests yet.</div>
-    <div v-else class="notice-list">
-      <article v-for="request in myRequests" :key="request.id" class="notice">
-        <div class="panel-heading">
-          <div>
-            <h3>{{ request.serviceTitle }}</h3>
-            <p class="muted">{{ request.location }} · {{ request.preferredDate }}</p>
-          </div><span class="status-pill" :class="request.status">{{ request.status }}</span>
-        </div>
-        <p>{{ request.details }}</p>
-        <div class="badge-row"><span class="status-pill">Provider: {{ request.providerStatus }}</span><span
-            class="status-pill">Chat: {{ chatStatus(request.id) }}</span></div>
-        <div class="inline-actions" style="margin-top:14px"><button class="secondary small"
-            @click="$emit('request-chat', { requestId: request.id, requestedBy: 'customer' })">Request chat
-            approval</button></div>
-        <div v-if="chatStatus(request.id) === 'approved'" class="chat-box" style="margin-top:14px">
-          <div v-for="m in messages.filter(item => item.requestId === request.id)" :key="m.id" class="chat-message">
-            <strong>{{ m.senderRole }}</strong>{{ m.message }}</div>
-          <div class="chat-compose"><input v-model="messageByRequest[request.id]"
-              placeholder="Message provider" /><button class="primary small"
-              @click="submitMessage(request.id)">Send</button></div>
-        </div>
-      </article>
+
+    <div v-if="!requests.length" class="empty-state">
+      No service requests yet.
+    </div>
+
+    <div v-else class="table-card clean-card">
+      <div class="panel-heading">
+        <h3>Previous requests</h3>
+        <button class="secondary small" @click="$emit('view-tracking')">View tracking demo</button>
+      </div>
+
+      <div class="responsive-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Location</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Tracking</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-for="request in requests" :key="request.id">
+              <td>
+                <strong>{{ request.serviceTitle }}</strong>
+                <small>{{ request.details }}</small>
+              </td>
+              <td>{{ request.location || request.customerLocation || 'Rajshahi' }}</td>
+              <td>{{ request.preferredDate || request.createdAt }}</td>
+              <td>
+                <span class="status-pill" :class="request.status">{{ request.status }}</span>
+              </td>
+              <td>
+                <button class="secondary small" @click="$emit('view-tracking')">Track</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </template>

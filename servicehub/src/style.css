@@ -1479,3 +1479,163 @@ td small {
     grid-template-columns: 1fr
   }
 }
+.service-card {
+  position: relative;
+}
+
+.service-card::after {
+  content: 'Rajshahi local';
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  color: var(--brand-dark);
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 10px 24px rgba(34, 21, 70, .14);
+}
+
+.card-footer-row strong {
+  color: var(--brand-dark);
+  white-space: nowrap;
+}
+
+[data-theme='dark'] .card-footer-row strong {
+  color: #c7b9ff;
+}
+
+:root {
+  font-family: "Inter", "Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, .brand-text {
+  font-weight: 850;
+  letter-spacing: -0.035em;
+}
+
+.nav-links button,
+.primary,
+.secondary,
+.theme-toggle,
+.account-pill {
+  font-weight: 750;
+}
+
+.tracking-layout {
+  padding: 34px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 34px;
+  align-items: center;
+}
+
+.tracking-steps {
+  display: grid;
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.tracking-steps article {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--muted);
+}
+
+.tracking-steps article span {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-soft);
+  color: var(--brand);
+  font-weight: 850;
+}
+
+.tracking-steps article.active {
+  color: var(--text);
+  font-weight: 750;
+}
+
+.tracking-steps article.active span {
+  background: var(--brand);
+  color: white;
+}
+
+.tracking-map {
+  min-height: 360px;
+  border-radius: 28px;
+  background:
+    linear-gradient(90deg, rgba(124,77,255,.08) 1px, transparent 1px),
+    linear-gradient(rgba(124,77,255,.08) 1px, transparent 1px),
+    var(--surface-soft);
+  background-size: 42px 42px;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-pin {
+  position: absolute;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid var(--line);
+  font-weight: 800;
+  box-shadow: var(--shadow);
+}
+
+.map-pin.provider {
+  top: 70px;
+  left: 70px;
+}
+
+.map-pin.home {
+  right: 70px;
+  bottom: 70px;
+}
+
+.map-line {
+  position: absolute;
+  width: 58%;
+  height: 4px;
+  top: 50%;
+  left: 20%;
+  background: linear-gradient(90deg, var(--brand), var(--brand-dark));
+  transform: rotate(28deg);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .tracking-layout {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+}
+
+.footer {
+  margin-top: auto;
+}
