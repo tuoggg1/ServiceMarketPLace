@@ -230,4 +230,37 @@ export const providersApi = {
   }
 }
 
+// Admin API
+export const adminApi = {
+  // Get dashboard stats (includes all bookings)
+  getDashboardStats: async () => {
+    const response = await api.get('/admins/dashboard')
+    return response.data
+  },
+  
+  // Get all bookings for admin
+  getAllBookings: async () => {
+    const response = await api.get('/bookings')
+    return response.data
+  },
+  
+  // Get all customers
+  getAllCustomers: async (page = 1, limit = 10) => {
+    const response = await api.get(`/admins/customers?page=${page}&limit=${limit}`)
+    return response.data
+  },
+  
+  // Get all providers
+  getAllProviders: async (page = 1, limit = 10) => {
+    const response = await api.get(`/admins/providers?page=${page}&limit=${limit}`)
+    return response.data
+  },
+  
+  // Update booking status
+  updateBookingStatus: async (bookingId, status) => {
+    const response = await api.patch(`/bookings/${bookingId}/status`, { status })
+    return response.data
+  }
+}
+
 export default api

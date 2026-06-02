@@ -11,7 +11,7 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import HowItWorksPage from './components/HowItWorksPage.vue'
 import { services } from './data/services.js'
 import { useAuth } from './composables/useAuth.js'
-import { bookingsApi, reviewsApi, reportsApi } from './services/api.js'
+import { bookingsApi, reviewsApi, reportsApi, adminApi } from './services/api.js'
 
 // Auth composable
 const { 
@@ -69,7 +69,28 @@ onMounted(async () => {
 // Fetch user's bookings, reviews, reports from API
 async function fetchUserData() {
   try {
-    if (userRole.value !== 'admin') {
+    if (userRole.value === 'admin') {
+      // Fetch all bookings for admin dashboard
+      try {
+        const bookingsData = await adminApi.getAllBookings()
+        
+        // Transform bookings data to match admin dashboard format
+        requests.value = bookingsData.map(booking => ({
+          id: booking.bookingId,
+          service: booking.providerService?.service?.serviceName || booking.notes || 'Service Request',
+          provider: booking.providerService?.provider?.providerName || 'Pending Assignment',
+          area: booking.address || '',
+          date: booking.date ? new Date(booking.date).toISOString().split('T')[0] : '',
+          details: booking.notes || '',
+          status: capitalizeStatus(booking.status),
+          createdAt: booking.createdAt
+        }))
+      } catch (err) {
+        console.error('Error fetching admin bookings:', err)
+        requests.value = []
+      }
+    } else {
+      // Customer: fetch their own bookings
       const [bookingsData, reviewsData, reportsData] = await Promise.all([
         bookingsApi.getMyBookings().catch(() => []),
         reviewsApi.getMyReviews().catch(() => []),
@@ -154,6 +175,7 @@ async function handleSignIn(credentials) {
       if (result.success) {
         showSignIn.value = false
         activePage.value = 'dashboard'
+        await fetchUserData()
         return
       }
     } catch (err) {
@@ -165,6 +187,7 @@ async function handleSignIn(credentials) {
     currentUser.value = { id: 'ADMIN-1', name: 'Admin', role: 'admin', userType: 'admin' }
     showSignIn.value = false
     activePage.value = 'dashboard'
+    await fetchUserData()
     return
   }
   
