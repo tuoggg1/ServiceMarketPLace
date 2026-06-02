@@ -1,5 +1,4 @@
 <script setup>
-// BookingTable.vue: reusable table for bookings if you want to display requests inside other pages later.
 defineProps({ bookings: { type: Array, default: () => [] }, admin: { type: Boolean, default: false } })
 defineEmits(['change-status'])
 </script>

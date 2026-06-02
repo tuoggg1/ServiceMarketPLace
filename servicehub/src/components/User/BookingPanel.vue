@@ -1,5 +1,4 @@
 <script setup>
-// BookingPanel.vue: optional compact booking panel. The main app uses RequestForm.vue for the full workflow.
 import { reactive } from 'vue'
 const props = defineProps({ service: { type: Object, required: true } })
 const emit = defineEmits(['close', 'submit-booking'])

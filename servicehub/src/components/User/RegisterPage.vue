@@ -58,7 +58,7 @@ function continueWithGoogle() {
         Create a Rajshahi customer account. Name, phone number, password and location are required.
       </p>
 
-      <label>Name * <input v-model="form.name" type="text" placeholder="Example: Amy" /></label>
+      <label>Name * <input v-model="form.name" type="text" placeholder="Example: Sam" /></label>
       <label>Phone number * <input v-model="form.phone" type="tel" placeholder="Example: 01XXXXXXXXX" /></label>
       <label>Password * <input v-model="form.password" type="password" placeholder="Create a password" /></label>
 

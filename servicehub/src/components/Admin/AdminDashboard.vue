@@ -1,87 +1,61 @@
 <script setup>
-// admin dashboard component: original admin operations workspace is preserved.
-// Extra workflow features are added inside the existing provider/request/chat sections.
 import { computed, ref } from 'vue'
 
 const props = defineProps({
   accounts: { type: Array, default: () => [] },
   requests: { type: Array, default: () => [] },
   chatApprovals: { type: Array, default: () => [] },
-  blockRequests: { type: Array, default: () => [] }
+  blockRequests: { type: Array, default: () => [] },
+  theme: { type: String, default: 'light' }
 })
 
-const emit = defineEmits([
-  'approve-provider',
-  'reject-provider',
-  'assign-request',
-  'approve-chat',
-  'reject-chat',
-  'status-change',
-  'block-status-change',
-  'reset-db',
-  'sign-out',
-  'go-home'
-])
+const emit = defineEmits(['approve-provider', 'reject-provider', 'assign-request', 'approve-chat', 'reject-chat', 'block-status-change', 'reset-db', 'sign-out', 'go-home', 'toggle-theme'])
 
 const activeView = ref('dashboard')
 const searchTerm = ref('')
 const selectedProviders = ref({})
 
-// Original sample tables are kept for the admin dashboard appearance.
-const users = ref([
+const sampleUsers = ref([
   { name: 'Rafiq Ahmed', email: 'rafiq.ahmed@email.com', phone: '+880 1712-345678', bookings: 24, spent: 45600, status: 'Active' },
-  { name: 'Fatima Begum', email: 'fatima.begum@email.com', phone: '+880 1812-456789', bookings: 12, spent: 23400, status: 'Active' },
-  { name: 'Karim Hassan', email: 'karim.h@email.com', phone: '+880 1912-567890', bookings: 45, spent: 89200, status: 'Blocked' },
-  { name: 'Nusrat Jahan', email: 'nusrat.j@email.com', phone: '+880 1612-678901', bookings: 3, spent: 5800, status: 'Active' }
+  { name: 'Fatima Begum', email: 'fatima.begum@email.com', phone: '+880 1812-456789', bookings: 12, spent: 23400, status: 'Active' }
 ])
-
 const sampleProviders = ref([
   { name: 'Abdul Karim', area: 'Rajshahi City', services: 'AC Repair, Installation', rating: 4.9, jobs: 456, earnings: 892000, status: 'Active' },
-  { name: 'Shahidul Islam', area: 'Boalia', services: 'Electrical Wiring, Fan Installation', rating: 4.7, jobs: 312, earnings: 624000, status: 'Active' },
-  { name: 'Firoz Ahmed', area: 'Laxmipur', services: 'Painting, Wall Texture', rating: 4.6, jobs: 87, earnings: 261000, status: 'Pending' },
-  { name: 'Salam Khan', area: 'Motihar', services: 'Appliance Repair', rating: 'N/A', jobs: 0, earnings: 0, status: 'Pending' }
+  { name: 'Firoz Ahmed', area: 'Laxmipur', services: 'Painting, Wall Texture', rating: 4.6, jobs: 87, earnings: 261000, status: 'Pending' }
 ])
 
-// Real provider accounts come from account creation/provider registration.
 const customerAccounts = computed(() => props.accounts.filter(account => account.role === 'customer'))
 const providerAccounts = computed(() => props.accounts.filter(account => account.role === 'provider'))
 const activeProviders = computed(() => providerAccounts.value.filter(account => account.status === 'active'))
-const pendingProviderAccounts = computed(() => providerAccounts.value.filter(account => account.status === 'pending-admin-approval'))
-
-const totalRevenue = computed(() => props.requests.reduce((sum, item) => sum + Number(item.total || item.budget || 0), 45678900))
-const waitingRequests = computed(() => props.requests.filter(request => request.status === 'waiting-admin-approval'))
+const pendingProviders = computed(() => providerAccounts.value.filter(account => account.status === 'pending-admin-approval'))
+const waitingRequests = computed(() => props.requests.filter(request => ['waiting-admin-approval', 'provider-declined'].includes(request.status)))
 const assignedRequests = computed(() => props.requests.filter(request => request.providerId))
-
+const totalRevenue = computed(() => props.requests.reduce((sum, item) => sum + Number(item.budget || item.total || 0), 0))
 const visibleRequests = computed(() => {
   const q = searchTerm.value.toLowerCase().trim()
   if (!q) return props.requests
-  return props.requests.filter(item => `${item.id} ${item.serviceTitle} ${item.customerName} ${item.providerId} ${item.status}`.toLowerCase().includes(q))
+  return props.requests.filter(item => `${item.id} ${item.serviceTitle} ${item.customerName} ${item.status}`.toLowerCase().includes(q))
 })
 
-function providerName(providerId) {
-  return props.accounts.find(account => account.id === providerId)?.name || 'Not assigned'
-}
-
+function providerName(providerId) { return props.accounts.find(account => account.id === providerId)?.name || 'Not assigned' }
 function assignProvider(request) {
   const providerId = selectedProviders.value[request.id]
-  if (!providerId) return alert('Please choose a provider before assigning the request.')
+  if (!providerId) return alert('Please choose an active provider before assigning the request.')
   emit('assign-request', { requestId: request.id, providerId })
 }
-
 function toggleUserStatus(user) { user.status = user.status === 'Blocked' ? 'Active' : 'Blocked' }
-function toggleSampleProviderStatus(provider) { provider.status = provider.status === 'Blocked' ? 'Active' : 'Blocked' }
 function approveSampleProvider(provider) { provider.status = 'Active' }
-function updateBlockStatus(request, status) { emit('block-status-change', { id: request.id, status }) }
+function toggleSampleProviderStatus(provider) { provider.status = provider.status === 'Blocked' ? 'Active' : 'Blocked' }
 </script>
 
 <template>
-  <section class="ops-layout admin-layout">
-    <aside class="ops-sidebar">
-      <div class="ops-user">
-        <div class="avatar">AD</div>
+  <section class="ops-layout modern-ops-layout admin-layout">
+    <aside class="ops-sidebar modern-sidebar">
+      <div class="ops-user compact-user">
         <div><strong>Admin Panel</strong><small>admin@servicehub.local</small></div>
       </div>
-      <nav class="ops-menu">
+
+      <nav class="ops-menu modern-menu">
         <button :class="{ active: activeView === 'dashboard' }" @click="activeView = 'dashboard'">Dashboard</button>
         <button :class="{ active: activeView === 'users' }" @click="activeView = 'users'">Users</button>
         <button :class="{ active: activeView === 'providers' }" @click="activeView = 'providers'">Service
@@ -92,39 +66,32 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
         <button :class="{ active: activeView === 'blocks' }" @click="activeView = 'blocks'">Block requests</button>
         <button :class="{ active: activeView === 'settings' }" @click="activeView = 'settings'">Settings</button>
       </nav>
-      <div class="ops-bottom"><button @click="$emit('go-home')">Back to home</button><button
-          @click="$emit('sign-out')">Exit admin</button></div>
+
+      <div class="ops-bottom modern-bottom">
+        <button class="secondary" type="button" @click="$emit('toggle-theme')">{{ theme === 'dark' ? 'Light mode' :
+          'Dark mode' }}</button>
+        <span class="ops-role-pill">Admin</span>
+        <button class="danger-soft" type="button" @click="$emit('sign-out')">Log out</button>
+      </div>
     </aside>
 
     <main class="ops-main">
       <header class="ops-topbar">
         <div>
           <h1>{{ activeView === 'dashboard' ? 'Admin dashboard' : activeView }}</h1>
-          <p>Manage users, providers, request assignment and chat approval.</p>
-        </div>
-        <input v-model="searchTerm" placeholder="Search..." />
+          <p>Manage users, provider approvals, request assignment and chat approval.</p>
+        </div><input v-model="searchTerm" placeholder="Search admin workspace..." />
       </header>
 
       <template v-if="activeView === 'dashboard'">
         <div class="stat-grid four">
-          <article class="stat-card dark"><span>Total users</span><strong>{{ customerAccounts.length + users.length
-              }}</strong><small>registered + sample records</small></article>
-          <article class="stat-card dark"><span>Service providers</span><strong>{{ providerAccounts.length +
-              sampleProviders.length }}</strong><small>{{ pendingProviderAccounts.length }} pending approval</small>
-          </article>
-          <article class="stat-card dark"><span>Total requests</span><strong>{{ requests.length }}</strong><small>{{
+          <article class="stat-card"><span>Total users</span><strong>{{ customerAccounts.length + sampleUsers.length
+              }}</strong></article>
+          <article class="stat-card"><span>Service providers</span><strong>{{ providerAccounts.length +
+              sampleProviders.length }}</strong><small>{{ pendingProviders.length }} pending approval</small></article>
+          <article class="stat-card"><span>Total requests</span><strong>{{ requests.length }}</strong><small>{{
             waitingRequests.length }} waiting assignment</small></article>
-          <article class="stat-card dark"><span>Total revenue</span><strong>BDT {{ totalRevenue.toLocaleString()
-              }}</strong><small>prototype estimate</small></article>
-        </div>
-        <div class="stat-grid four compact">
-          <article class="stat-card dark"><span>Waiting requests</span><strong>{{ waitingRequests.length }}</strong>
-          </article>
-          <article class="stat-card dark"><span>Active providers</span><strong>{{ activeProviders.length }}</strong>
-          </article>
-          <article class="stat-card dark"><span>Chat approvals</span><strong>{{ chatApprovals.length }}</strong>
-          </article>
-          <article class="stat-card dark"><span>Assigned requests</span><strong>{{ assignedRequests.length }}</strong>
+          <article class="stat-card"><span>Total revenue</span><strong>BDT {{ totalRevenue.toLocaleString() }}</strong>
           </article>
         </div>
         <div class="ops-grid two">
@@ -133,15 +100,14 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
             <div v-if="requests.length === 0" class="empty-state">No service requests submitted yet.</div>
             <article v-for="request in requests.slice(0, 4)" :key="request.id" class="request-row">
               <div><strong>{{ request.serviceTitle }}</strong><small>{{ request.customerName }} · {{
-                request.preferredDate }}</small></div><strong>BDT {{ Number(request.budget || request.total ||
-                    0).toLocaleString() }}</strong>
+                request.preferredDate }}</small></div><strong>BDT {{ Number(request.budget || 0).toLocaleString()
+                }}</strong>
             </article>
           </section>
           <section class="ops-panel">
             <h2>Pending provider approvals</h2>
-            <div v-if="pendingProviderAccounts.length === 0" class="empty-state">No real provider applications pending.
-            </div>
-            <article v-for="provider in pendingProviderAccounts" :key="provider.id" class="request-row">
+            <div v-if="pendingProviders.length === 0" class="empty-state">No real provider applications pending.</div>
+            <article v-for="provider in pendingProviders" :key="provider.id" class="request-row">
               <div><strong>{{ provider.name }}</strong><small>{{ provider.serviceType }} · {{ provider.email }}</small>
               </div>
               <div class="row-actions"><button class="primary small"
@@ -155,9 +121,9 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
       <template v-if="activeView === 'users'">
         <section class="ops-panel">
           <div class="panel-heading">
-            <h2>User management</h2><span>Showing {{ users.length + customerAccounts.length }} users</span>
+            <h2>User management</h2><span>Showing {{ customerAccounts.length + sampleUsers.length }} users</span>
           </div>
-          <div class="responsive-table dark-table">
+          <div class="responsive-table">
             <table>
               <thead>
                 <tr>
@@ -172,13 +138,13 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
               <tbody>
                 <tr v-for="account in customerAccounts" :key="account.id">
                   <td><strong>{{ account.name }}</strong><small>real customer account</small></td>
-                  <td>{{ account.email }}<small>{{ account.authProvider || 'email' }}</small></td>
+                  <td>{{ account.email }}<small>{{ account.phone }}</small></td>
                   <td>{{requests.filter(r => r.customerId === account.id).length}}</td>
                   <td>backend</td>
-                  <td><span class="status-pill" :class="account.status">{{ account.status }}</span></td>
+                  <td><span class="status-pill active">active</span></td>
                   <td><button class="secondary small">View</button></td>
                 </tr>
-                <tr v-for="user in users" :key="user.email">
+                <tr v-for="user in sampleUsers" :key="user.email">
                   <td><strong>{{ user.name }}</strong><small>sample customer account</small></td>
                   <td>{{ user.email }}<small>{{ user.phone }}</small></td>
                   <td>{{ user.bookings }}</td>
@@ -196,9 +162,9 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
       <template v-if="activeView === 'providers'">
         <section class="ops-panel">
           <div class="panel-heading">
-            <h2>Service provider management</h2><span>Real providers + original sample table</span>
+            <h2>Service provider management</h2><span>Real providers + sample providers</span>
           </div>
-          <div class="responsive-table dark-table">
+          <div class="responsive-table">
             <table>
               <thead>
                 <tr>
@@ -220,8 +186,8 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
                   <td>{{requests.filter(r => r.providerId === provider.id).length}}</td>
                   <td>backend</td>
                   <td><span class="status-pill" :class="provider.status">{{ provider.status }}</span></td>
-                  <td><button v-if="provider.status === 'pending-admin-approval'" class="primary small"
-                      @click="$emit('approve-provider', provider.id)">Approve</button><button
+                  <td class="row-actions"><button v-if="provider.status === 'pending-admin-approval'"
+                      class="primary small" @click="$emit('approve-provider', provider.id)">Approve</button><button
                       v-if="provider.status === 'pending-admin-approval'" class="secondary small"
                       @click="$emit('reject-provider', provider.id)">Reject</button><button v-else
                       class="secondary small">View</button></td>
@@ -245,16 +211,17 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
       </template>
 
       <template v-if="activeView === 'requests'">
-        <div class="stat-grid six">
-          <article
-            v-for="status in ['All', 'waiting-admin-approval', 'assigned-to-provider', 'provider-accepted', 'provider-declined', 'completed']"
-            :key="status" class="stat-card dark"><span>{{ status }}</span><strong>{{status === 'All' ? requests.length
-              : requests.filter(r => r.status === status).length }}</strong></article>
+        <div class="stat-grid four">
+          <article class="stat-card"><span>Waiting</span><strong>{{ waitingRequests.length }}</strong></article>
+          <article class="stat-card"><span>Assigned</span><strong>{{ assignedRequests.length }}</strong></article>
+          <article class="stat-card"><span>Completed</span><strong>{{requests.filter(r => r.status ===
+              'completed').length }}</strong></article>
+          <article class="stat-card"><span>Total</span><strong>{{ requests.length }}</strong></article>
         </div>
         <section class="ops-panel">
           <h2>Service request approval and provider assignment</h2>
           <div v-if="requests.length === 0" class="empty-state">No customer service requests yet.</div>
-          <div v-else class="responsive-table dark-table">
+          <div v-else class="responsive-table">
             <table>
               <thead>
                 <tr>
@@ -264,6 +231,7 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
                   <th>Provider</th>
                   <th>Schedule</th>
                   <th>Amount</th>
+                  <th>Payment</th>
                   <th>Status</th>
                   <th>Assign</th>
                 </tr>
@@ -275,7 +243,10 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
                   <td>{{ request.customerName }}</td>
                   <td>{{ providerName(request.providerId) }}<small>{{ request.providerStatus }}</small></td>
                   <td>{{ request.preferredDate }}<small>{{ request.location }}</small></td>
-                  <td>{{ request.budget || request.total || 0 }}৳</td>
+                  <td>{{ request.budget || 0 }}৳</td>
+                  <td><span class="status-pill" :class="request.needsUpfrontPayment ? 'pending' : 'active'">{{
+                    request.needsUpfrontPayment ? 'bank upfront' : 'after service' }}</span><small
+                      v-if="request.needsUpfrontPayment">{{ request.bankName }} · {{ request.accountName }}</small></td>
                   <td><span class="status-pill"
                       :class="String(request.status).toLowerCase().replaceAll('_', '-').replaceAll(' ', '-')">{{
                       request.status }}</span></td>
@@ -299,9 +270,9 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
           <div class="panel-heading">
             <h2>Chat approval requests</h2><span>{{ chatApprovals.length }} submitted</span>
           </div>
-          <p class="muted">User and provider chat is locked until admin approves the request.</p>
+          <p class="muted">User/provider chat is locked until admin approves the request.</p>
           <div v-if="chatApprovals.length === 0" class="empty-state">No chat approval requests yet.</div>
-          <div v-else class="responsive-table dark-table">
+          <div v-else class="responsive-table">
             <table>
               <thead>
                 <tr>
@@ -334,7 +305,7 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
             <h2>Block requests</h2><span>{{ blockRequests.length }} submitted</span>
           </div>
           <div v-if="blockRequests.length === 0" class="empty-state">No block requests yet.</div>
-          <div v-else class="responsive-table dark-table">
+          <div v-else class="responsive-table">
             <table>
               <thead>
                 <tr>
@@ -354,8 +325,9 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
                   <td>{{ request.reason }}</td>
                   <td><span class="status-pill" :class="request.status.toLowerCase()">{{ request.status }}</span></td>
                   <td class="row-actions"><button class="success small"
-                      @click="updateBlockStatus(request, 'Approved')">Approve</button><button class="secondary small"
-                      @click="updateBlockStatus(request, 'Rejected')">Reject</button></td>
+                      @click="$emit('block-status-change', { id: request.id, status: 'Approved' })">Approve</button><button
+                      class="secondary small"
+                      @click="$emit('block-status-change', { id: request.id, status: 'Rejected' })">Reject</button></td>
                 </tr>
               </tbody>
             </table>
@@ -379,16 +351,15 @@ function updateBlockStatus(request, status) { emit('block-status-change', { id: 
           </div>
         </section>
       </template>
-
       <template v-if="activeView === 'settings'">
         <section class="ops-panel settings-panel">
           <h2>Admin settings</h2>
-          <div class="settings-grid"><label>Platform name<input value="Service Hub" /></label><label>Default city<input
+          <div class="settings-grid"><label>Platform name<input value="ServiceHub" /></label><label>Default city<input
                 value="Rajshahi City" /></label><label>Support email<input
                 value="support@servicehub.com" /></label><label>Backend status<input
-                value="ready for real database API connection" /></label></div>
+                value="ready for database API connection" /></label></div>
           <div class="form-actions"><button class="secondary" @click="$emit('reset-db')">Reset local demo
-              database</button><button class="primary">Save settings</button></div>
+              data</button><button class="primary">Save settings</button></div>
         </section>
       </template>
     </main>

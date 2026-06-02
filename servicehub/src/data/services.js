@@ -22,7 +22,15 @@ export const services = [
     price: 1200,
     currency: 'BDT',
     image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-    description: 'Packing, lifting, small shifting and local moving support.'
+    description: 'Packing, lifting, small shifting and local moving support.',
+    upfrontPayment: {
+      required: true,
+      amount: 300,
+      bankName: 'BRAC Bank',
+      accountName: 'ServiceHub Moving Provider',
+      accountNumber: '01700000001',
+      note: 'Moving jobs require a small provider deposit before vehicle scheduling.'
+    }
   },
   {
     id: 'delivery',
@@ -49,7 +57,15 @@ export const services = [
     price: 1000,
     currency: 'BDT',
     image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4',
-    description: 'AC servicing, cooling issue checks and installation help.'
+    description: 'AC servicing, cooling issue checks and installation help.',
+    upfrontPayment: {
+      required: true,
+      amount: 250,
+      bankName: 'Dutch-Bangla Bank',
+      accountName: 'Rajshahi AC Provider',
+      accountNumber: '01800000002',
+      note: 'AC repair requires an inspection booking deposit before provider dispatch.'
+    }
   },
   {
     id: 'electrician',
@@ -58,7 +74,15 @@ export const services = [
     price: 600,
     currency: 'BDT',
     image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e',
-    description: 'Fan, switch, light, socket and wiring support.'
+    description: 'Fan, switch, light, socket and wiring support.',
+    upfrontPayment: {
+      required: true,
+      amount: 200,
+      bankName: 'City Bank',
+      accountName: 'Rajshahi Electrical Provider',
+      accountNumber: '01900000003',
+      note: 'Electrical work may require upfront inspection payment for safety scheduling.'
+    }
   },
   {
     id: 'plumbing',

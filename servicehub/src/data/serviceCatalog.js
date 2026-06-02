@@ -1,4 +1,4 @@
-// Service catalogue shown on the public marketplace.
+
 // Later, replace this file with GET /api/services from your PHP/MySQL or Node backend.
 export const serviceCatalog = [
     { id: 'cleaning', title: 'Home Cleaning', category: 'Home', startingPrice: 35, image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80', description: 'General cleaning, room cleaning, tidy-up, and household support.' },
