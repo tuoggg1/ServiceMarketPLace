@@ -1,278 +1,278 @@
 <script setup>
-// Root controller: owns simple routing, signed-in user state, service flow, requests, user location and theme.
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { services } from './data/services'
 
-import NavBar from './components/NavBar.vue'
-import HeroSection from './components/HeroSection.vue'
-import ServiceFlow from './components/ServiceFlow.vue'
-import RequestForm from './components/RequestForm.vue'
-import CustomerDashboard from './components/CustomerDashboard.vue'
-import ProviderDashboard from './components/ProviderDashboard.vue'
-import AdminDashboard from './components/AdminDashboard.vue'
-import HowItWorksPage from './components/HowItWorksPage.vue'
-import RegisterPage from './components/RegisterPage.vue'
-import SignInPage from './components/SignInPage.vue'
-import FooterSection from './components/FooterSection.vue'
-import { services } from './data/services.js'
+import NavBar from './components/User/NavBar.vue'
+import HeroSection from './components/User/HeroSection.vue'
+import ServiceGrid from './components/User/ServiceGrid.vue'
+import HowItWorksPage from './components/User/HowItWorksPage.vue'
+import SignInPage from './components/User/SignInPage.vue'
+import RegisterPage from './components/User/RegisterPage.vue'
+import ProviderRegisterPage from './components/Provider/ProviderRegisterPage.vue'
+import RequestForm from './components/User/RequestForm.vue'
+import CustomerDashboard from './components/User/CustomerDashboard.vue'
+import ProviderDashboard from './components/Provider/ProviderDashboard.vue'
+import AdminDashboard from './components/Admin/AdminDashboard.vue'
+import TrackingDemo from './components/User/TrackingDemo.vue'
+import FooterSection from './components/User/FooterSection.vue'
+import AIChatbot from './components/User/AIChatbot.vue'
 
-const activePage = ref('home')
-const flowMode = ref('services')
+// localStorage keeps the demo workflow usable after browser refresh.
+const savedRequests = JSON.parse(localStorage.getItem('servicehub-requests') || '[]')
+const savedAccounts = JSON.parse(localStorage.getItem('servicehub-accounts') || '[]')
+const savedChats = JSON.parse(localStorage.getItem('servicehub-chat-approvals') || '[]')
+const savedMessages = JSON.parse(localStorage.getItem('servicehub-messages') || '[]')
+const savedBlocks = JSON.parse(localStorage.getItem('servicehub-block-requests') || '[]')
+const savedUser = JSON.parse(localStorage.getItem('servicehub-user') || 'null')
+
+const currentPage = ref(savedUser ? 'dashboard' : 'home')
+const theme = ref(localStorage.getItem('servicehub-theme') || 'light')
+const signedInUser = ref(savedUser)
 const selectedService = ref(null)
-const selectedTask = ref('')
-const selectedLocation = ref('Rajshahi City')
-const showLocationModal = ref(false)
-const currentUser = ref(null)
-const loginError = ref('')
-const theme = ref('light')
+const requests = ref(savedRequests)
+const accounts = ref(savedAccounts)
+const chatApprovals = ref(savedChats)
+const messages = ref(savedMessages)
+const blockRequests = ref(savedBlocks)
 
-// These locations are kept in App.vue so registration, navbar and request form share the same source.
-const locations = ['Rajshahi City', 'Boalia', 'Shaheb Bazar', 'Laxmipur', 'Motihar', 'Kazla', 'Uposhohor', 'Rajshahi University Area', 'Paba nearby', 'Godagari nearby']
+document.documentElement.dataset.theme = theme.value
 
-// Prototype accounts. Later this array can be replaced by database/API users.
-const registeredUsers = ref([
-  { username: 'customer', password: '1234', role: 'customer', name: 'Customer', phone: '01700000000', location: 'Rajshahi City' },
-  { username: 'provider', password: '2222', role: 'provider', name: 'Abdul Karim', phone: '01800000000', location: 'Boalia' },
-  { username: 'admin', password: '1111', role: 'admin', name: 'Admin Panel', phone: '01900000000', location: 'Rajshahi City' }
-])
-
-// Request records are created by real signed-in customers 
-const bookings = ref([])
-
-// Block requests are created by customers/providers and reviewed by admin.
-const blockRequests = ref([])
-
-const isOpsPage = computed(() => activePage.value === 'admin' || activePage.value === 'provider')
-
-// Customer dashboard only displays the signed-in customer's own requests.
-const customerBookings = computed(() => {
-  if (!currentUser.value) return []
-  return bookings.value.filter((booking) => booking.customerId === currentUser.value.username)
-})
-
-// The displayed location belongs to the signed-in user. Guests use the global selected location.
-const displayLocation = computed(() => currentUser.value?.location || selectedLocation.value)
-
-function applyTheme(value) {
-  theme.value = value
+watch(theme, value => {
+  document.documentElement.dataset.theme = value
   localStorage.setItem('servicehub-theme', value)
-  document.documentElement.setAttribute('data-theme', value)
-}
-
-function toggleTheme() {
-  applyTheme(theme.value === 'light' ? 'dark' : 'light')
-}
-
-onMounted(() => {
-  applyTheme(localStorage.getItem('servicehub-theme') || 'light')
 })
+watch(requests, value => localStorage.setItem('servicehub-requests', JSON.stringify(value)), { deep: true })
+watch(accounts, value => localStorage.setItem('servicehub-accounts', JSON.stringify(value)), { deep: true })
+watch(chatApprovals, value => localStorage.setItem('servicehub-chat-approvals', JSON.stringify(value)), { deep: true })
+watch(messages, value => localStorage.setItem('servicehub-messages', JSON.stringify(value)), { deep: true })
+watch(blockRequests, value => localStorage.setItem('servicehub-block-requests', JSON.stringify(value)), { deep: true })
+watch(signedInUser, value => {
+  if (value) localStorage.setItem('servicehub-user', JSON.stringify(value))
+  else localStorage.removeItem('servicehub-user')
+}, { deep: true })
 
-function goHome() {
-  activePage.value = 'home'
-  flowMode.value = 'services'
-  selectedService.value = null
-  selectedTask.value = ''
+const isOpsDashboard = computed(() => currentPage.value === 'dashboard' && ['admin', 'provider'].includes(signedInUser.value?.role))
+
+function goTo(page) {
+  currentPage.value = page
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+function toggleTheme() { theme.value = theme.value === 'dark' ? 'light' : 'dark' }
+function signOut() { signedInUser.value = null; currentPage.value = 'home' }
 
-function goServices() {
-  activePage.value = 'services'
-  flowMode.value = 'services'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+function upsertAccount(account) {
+  const index = accounts.value.findIndex(item => item.id === account.id)
+  if (index >= 0) accounts.value[index] = account
+  else accounts.value.unshift(account)
 }
 
-function goHowItWorks() {
-  activePage.value = 'how'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function goDashboard() {
-  if (!currentUser.value) {
-    activePage.value = 'signin'
-    return
-  }
-  activePage.value = currentUser.value.role === 'admin' ? 'admin' : currentUser.value.role === 'provider' ? 'provider' : 'dashboard'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function selectService(service) {
-  selectedService.value = service
-  selectedTask.value = ''
-  flowMode.value = 'detail'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-// Guests can browse services, but they must sign in/register before opening the request form.
-function selectTask(task) {
-  selectedTask.value = task
-  if (!currentUser.value) {
-    loginError.value = 'Please sign in or create an account before requesting a service.'
-    activePage.value = 'signin'
-    return
-  }
-  if (currentUser.value.role !== 'customer') {
-    loginError.value = 'Only customer accounts can request services.'
-    activePage.value = 'signin'
-    return
-  }
-  activePage.value = 'request'
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-function submitRequest(payload) {
-  if (!currentUser.value) {
-    activePage.value = 'signin'
-    return
-  }
-
-  // The form location follows the user location shown in the navbar unless the customer changes it first.
-  bookings.value.unshift({
-    id: `REQ-${Date.now().toString().slice(-6)}`,
-    serviceTitle: selectedService.value?.title || payload.serviceTitle || 'Selected service',
-    task: selectedTask.value || payload.task || 'General request',
-    provider: 'Unassigned',
-    customerId: currentUser.value.username,
-    customerName: currentUser.value.name,
-    phone: payload.phone || currentUser.value.phone,
-    city: displayLocation.value,
-    area: payload.area || displayLocation.value,
-    address: payload.address,
-    date: payload.date,
-    time: payload.time,
-    payment: payload.payment,
-    total: Number(payload.budget || selectedService.value?.price || 0),
-    status: 'Pending',
-    notes: payload.details
-  })
-
-  goDashboard()
-}
-
-function register(payload) {
-  const username = payload.phone.replace(/\D/g, '')
-  const user = {
-    username,
-    password: payload.password,
+function createAccount(user) {
+  const account = {
+    id: `CUS-${Date.now()}`,
     role: 'customer',
-    name: payload.name,
-    phone: payload.phone,
-    location: payload.location
+    status: 'active',
+    name: user.name || 'Google Customer',
+    email: user.email || `${user.phone || 'customer'}@servicehub.local`,
+    phone: user.phone || '01XXXXXXXXX',
+    location: user.location || 'Rajshahi',
+    authProvider: user.authProvider || 'email'
   }
-  registeredUsers.value.push(user)
-  currentUser.value = user
-  selectedLocation.value = user.location
-  activePage.value = 'dashboard'
+  upsertAccount(account)
+  signedInUser.value = account
+  currentPage.value = 'dashboard'
 }
 
-function signIn({ username, password }) {
-  loginError.value = ''
-  const user = registeredUsers.value.find((account) => account.username.toLowerCase() === username.trim().toLowerCase() && account.password === password)
-  if (!user) {
-    loginError.value = 'Invalid login. Try customer/1234, provider/2222, admin/1111, or your registered phone number.'
-    return
+function createProvider(provider) {
+  const account = {
+    id: `PROV-${Date.now()}`,
+    role: 'provider',
+    status: 'pending-admin-approval',
+    name: provider.name,
+    email: provider.email,
+    phone: provider.phone,
+    area: provider.suburb || provider.area || 'Rajshahi City',
+    serviceType: provider.serviceType || 'General service',
+    experience: provider.experience,
+    authProvider: provider.authProvider || 'email'
   }
-  currentUser.value = user
-  selectedLocation.value = user.location || selectedLocation.value
-  goDashboard()
+  upsertAccount(account)
+  signedInUser.value = account
+  currentPage.value = 'dashboard'
 }
 
-// Demo-only Google auth stub: in production, replace this with Firebase Auth or Google OAuth callback.
-function googleAuth() {
-  window.location.href = 'https://accounts.google.com/'
+function signIn(payload) {
+  const role = payload.role || 'customer'
+  if (role === 'admin') {
+    signedInUser.value = { id: 'ADMIN-01', role: 'admin', status: 'active', name: 'Admin User', email: 'admin@servicehub.local' }
+  } else if (role === 'provider') {
+    signedInUser.value = { id: 'PROV-DEMO-01', role: 'provider', status: 'active', name: 'Rajshahi Provider', email: payload.email || 'provider@servicehub.local', serviceType: 'AC Repair & Home Maintenance', area: 'Rajshahi City' }
+    upsertAccount(signedInUser.value)
+  } else {
+    signedInUser.value = { id: 'GOOGLE-CUSTOMER', role: 'customer', status: 'active', name: payload.name || 'Google Customer', email: payload.email || 'google.customer@servicehub.local', phone: payload.phone || '01XXXXXXXXX', location: 'Rajshahi City' }
+    upsertAccount(signedInUser.value)
+  }
+  currentPage.value = 'dashboard'
 }
 
-function signOut() {
-  currentUser.value = null
-  loginError.value = ''
-  goHome()
+function openRequest(service) {
+  selectedService.value = service
+  currentPage.value = signedInUser.value ? 'request' : 'signin'
 }
 
-function updateStatus({ id, status }) {
-  const booking = bookings.value.find((item) => item.id === id)
-  if (!booking) return
-  booking.status = status
-  if (status === 'Accepted') booking.provider = currentUser.value?.name || 'Assigned provider'
-}
-
-function chooseLocation(location) {
-  selectedLocation.value = location
-  if (currentUser.value) currentUser.value.location = location
-  showLocationModal.value = false
-}
-
-function createBlockRequest(payload) {
-  if (!currentUser.value) return
-  blockRequests.value.unshift({
-    id: `BLK-${Date.now().toString().slice(-6)}`,
-    requesterId: currentUser.value.username,
-    requesterName: currentUser.value.name,
-    requesterRole: currentUser.value.role,
-    targetName: payload.targetName,
-    targetRole: payload.targetRole,
-    reason: payload.reason,
-    status: 'Pending'
+function submitRequest(form) {
+  requests.value.unshift({
+    id: `REQ-${Date.now()}`,
+    ...form,
+    customerId: signedInUser.value.id,
+    customerName: signedInUser.value.name,
+    customerLocation: signedInUser.value.location,
+    status: 'waiting-admin-approval',
+    providerStatus: 'unassigned',
+    createdAt: new Date().toLocaleString()
   })
+  currentPage.value = 'dashboard'
 }
 
+function approveProvider(providerId) {
+  const provider = accounts.value.find(item => item.id === providerId)
+  if (provider) provider.status = 'active'
+}
+function rejectProvider(providerId) {
+  const provider = accounts.value.find(item => item.id === providerId)
+  if (provider) provider.status = 'rejected'
+}
+function assignRequest({ requestId, providerId }) {
+  const request = requests.value.find(item => item.id === requestId)
+  if (!request) return
+  request.providerId = providerId
+  request.status = 'assigned-to-provider'
+  request.providerStatus = 'waiting-provider-acceptance'
+}
+function acceptProviderRequest({ requestId, providerId }) {
+  const request = requests.value.find(item => item.id === requestId)
+  if (!request) return
+  request.providerId = providerId || request.providerId
+  request.status = 'provider-accepted'
+  request.providerStatus = 'accepted'
+}
+function declineProviderRequest({ requestId, reason }) {
+  const request = requests.value.find(item => item.id === requestId)
+  if (!request) return
+  request.status = 'provider-declined'
+  request.providerStatus = 'declined'
+  request.declineReason = reason
+}
+function changeRequestStatus({ requestId, status }) {
+  const request = requests.value.find(item => item.id === requestId)
+  if (!request) return
+  request.status = status === 'completed' ? 'completed' : request.status
+  request.providerStatus = status
+}
+function requestChat(payload) {
+  if (chatApprovals.value.some(item => item.requestId === payload.requestId)) return
+  chatApprovals.value.unshift({ id: `CHAT-${Date.now()}`, status: 'pending', ...payload })
+}
+function approveChat(id) {
+  const approval = chatApprovals.value.find(item => item.id === id)
+  if (approval) approval.status = 'approved'
+}
+function rejectChat(id) {
+  const approval = chatApprovals.value.find(item => item.id === id)
+  if (approval) approval.status = 'rejected'
+}
+function sendMessage(payload) {
+  messages.value.push({ id: `MSG-${Date.now()}`, createdAt: new Date().toLocaleString(), ...payload })
+}
+function createBlockRequest(payload) {
+  blockRequests.value.unshift({ id: `BLK-${Date.now()}`, requesterName: signedInUser.value?.name, requesterRole: signedInUser.value?.role, status: 'Pending', ...payload })
+}
 function updateBlockRequest({ id, status }) {
-  const item = blockRequests.value.find((request) => request.id === id)
-  if (item) item.status = status
+  const request = blockRequests.value.find(item => item.id === id)
+  if (request) request.status = status
 }
-
+function resetLocalDemo() {
+  requests.value = []
+  chatApprovals.value = []
+  messages.value = []
+  blockRequests.value = []
+}
 </script>
 
 <template>
-  <NavBar v-if="!isOpsPage" :signed-in="!!currentUser" :active-page="activePage"
-    :user-role="currentUser?.role || 'customer'" :user-name="currentUser?.name || ''" :location="displayLocation"
-    :theme="theme" @go-home="goHome" @go-dashboard="goDashboard" @find-services="goServices"
-    @how-it-works="goHowItWorks" @sign-in="activePage = 'signin'" @register="activePage = 'register'"
-    @sign-out="signOut" @open-location="showLocationModal = true" @toggle-theme="toggleTheme" />
+  <div class="app-shell">
+    <NavBar
+      v-if="!isOpsDashboard"
+      :active-page="currentPage"
+      :signed-in-user="signedInUser"
+      :theme="theme"
+      @navigate="goTo"
+      @sign-out="signOut"
+      @toggle-theme="toggleTheme"
+    />
 
-  <main>
-    <HeroSection v-if="activePage === 'home'" :location="displayLocation" @find-services="goServices"
-      @view-dashboard="goDashboard" />
+    <main class="app-main">
+      <template v-if="currentPage === 'home'">
+        <HeroSection @find-services="goTo('home')" @browse-services="goTo('home')" @view-tracking="goTo('tracking')" />
+        <ServiceGrid :services="services" @request-service="openRequest" />
+      </template>
 
-    <ServiceFlow v-if="activePage === 'services'" :services="services" :mode="flowMode"
-      :selected-service="selectedService" @select-service="selectService" @select-task="selectTask"
-      @back="flowMode = 'services'" />
+      <HowItWorksPage v-else-if="currentPage === 'how'" />
+      <SignInPage v-else-if="currentPage === 'signin'" @sign-in="signIn" @go-register="goTo('register')" />
+      <RegisterPage v-else-if="currentPage === 'register'" @create-account="createAccount" @google-create-account="createAccount" @go-signin="goTo('signin')" />
+      <ProviderRegisterPage v-else-if="currentPage === 'provider-register'" @created="createProvider" @google-create="createProvider" @go="goTo" />
+      <RequestForm v-else-if="currentPage === 'request'" :service="selectedService" :customer="signedInUser" @submit-request="submitRequest" @back="goTo('home')" />
 
-    <RequestForm v-if="activePage === 'request'" :selected-service="selectedService" :selected-task="selectedTask"
-      :selected-location="displayLocation" :locations="locations" @back="activePage = 'services'"
-      @change-location="showLocationModal = true" @submit-request="submitRequest" />
+      <CustomerDashboard v-else-if="currentPage === 'dashboard' && signedInUser?.role === 'customer'" :customer="signedInUser" :requests="requests" @request-another="goTo('home')" @view-tracking="goTo('tracking')" />
 
-    <HowItWorksPage v-if="activePage === 'how'" />
+      <ProviderDashboard
+        v-else-if="currentPage === 'dashboard' && signedInUser?.role === 'provider'"
+        :current-user="signedInUser"
+        :requests="requests"
+        :chat-approvals="chatApprovals"
+        :messages="messages"
+        :theme="theme"
+        @toggle-theme="toggleTheme"
+        @sign-out="signOut"
+        @go-home="goTo('home')"
+        @accept-request="acceptProviderRequest"
+        @decline-request="declineProviderRequest"
+        @status-change="changeRequestStatus"
+        @request-chat="requestChat"
+        @send-message="sendMessage"
+        @block-request="createBlockRequest"
+      />
 
-    <RegisterPage v-if="activePage === 'register'" :locations="locations" @register="register"
-      @go-signin="activePage = 'signin'" @google-auth="googleAuth" />
+      <AdminDashboard
+        v-else-if="currentPage === 'dashboard' && signedInUser?.role === 'admin'"
+        :accounts="accounts"
+        :requests="requests"
+        :chat-approvals="chatApprovals"
+        :block-requests="blockRequests"
+        :theme="theme"
+        @toggle-theme="toggleTheme"
+        @sign-out="signOut"
+        @go-home="goTo('home')"
+        @approve-provider="approveProvider"
+        @reject-provider="rejectProvider"
+        @assign-request="assignRequest"
+        @approve-chat="approveChat"
+        @reject-chat="rejectChat"
+        @block-status-change="updateBlockRequest"
+        @reset-db="resetLocalDemo"
+      />
 
-    <SignInPage v-if="activePage === 'signin'" :error="loginError" @sign-in="signIn"
-      @go-register="activePage = 'register'" @google-auth="googleAuth" />
+      <TrackingDemo v-else-if="currentPage === 'tracking'" :requests="requests" :signed-in-user="signedInUser" @back="goTo(signedInUser ? 'dashboard' : 'home')" />
+    </main>
 
-    <CustomerDashboard v-if="activePage === 'dashboard'" :requests="customerBookings"
-      :user-name="currentUser?.name || 'Customer'" @new-request="goServices" @block-request="createBlockRequest" />
+    <AIChatbot
+      v-if="!isOpsDashboard"
+      :signed-in-user="signedInUser"
+      :requests="requests"
+      :services="services"
+      :current-page="currentPage"
+      @navigate="goTo"
+    />
 
-    <ProviderDashboard v-if="activePage === 'provider'" :requests="bookings"
-      :provider-name="currentUser?.name || 'Provider'" @status-change="updateStatus" @block-request="createBlockRequest"
-      @sign-out="signOut" @go-home="goHome" />
-
-    <AdminDashboard v-if="activePage === 'admin'" :requests="bookings" :block-requests="blockRequests"
-      @status-change="updateStatus" @block-status-change="updateBlockRequest" @sign-out="signOut" @go-home="goHome" />
-  </main>
-
-  <FooterSection v-if="!isOpsPage" />
-
-  <section v-if="showLocationModal" class="modal-backdrop" @click.self="showLocationModal = false">
-    <div class="location-modal clean-card">
-      <button class="icon-close" @click="showLocationModal = false">Close</button>
-      <p class="eyebrow">service area</p>
-      <h2>Choose your Rajshahi location</h2>
-      <p class="muted">This area becomes your account location and automatically fills the request form.</p>
-      <div class="location-grid">
-        <button v-for="location in locations" :key="location" class="location-option"
-          :class="{ selected: displayLocation === location }" @click="chooseLocation(location)">
-          <strong>{{ location }}</strong>
-          <span>Use as my request location</span>
-        </button>
-      </div>
-    </div>
-  </section>
+    <FooterSection v-if="!isOpsDashboard" />
+  </div>
 </template>
