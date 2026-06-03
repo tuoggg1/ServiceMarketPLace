@@ -243,6 +243,40 @@ export class BookingsService {
     });
   }
 
+  async updateStatusAdmin(bookingId: string, status: string): Promise<Booking> {
+    const booking = await this.bookingRepository.findOne({
+      where: { bookingId },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    // Map status string to enum
+    const statusMap: Record<string, BookingStatus> = {
+      'pending': BookingStatus.PENDING,
+      'Pending': BookingStatus.PENDING,
+      'accepted': BookingStatus.CONFIRMED,
+      'Accepted': BookingStatus.CONFIRMED,
+      'confirmed': BookingStatus.CONFIRMED,
+      'Confirmed': BookingStatus.CONFIRMED,
+      'in_progress': BookingStatus.IN_PROGRESS,
+      'In Progress': BookingStatus.IN_PROGRESS,
+      'completed': BookingStatus.COMPLETED,
+      'Completed': BookingStatus.COMPLETED,
+      'cancelled': BookingStatus.CANCELLED,
+      'Cancelled': BookingStatus.CANCELLED,
+    };
+
+    const newStatus = statusMap[status];
+    if (!newStatus) {
+      throw new BadRequestException(`Invalid status: ${status}`);
+    }
+
+    booking.status = newStatus;
+    return this.bookingRepository.save(booking);
+  }
+
   async getStats(): Promise<any> {
     const total = await this.bookingRepository.count();
     const pending = await this.bookingRepository.count({ where: { status: BookingStatus.PENDING } });

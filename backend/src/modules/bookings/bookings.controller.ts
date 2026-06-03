@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Body,
   Param,
   Query,
@@ -35,6 +36,16 @@ export class BookingsController {
   @ApiResponse({ status: 200, description: 'List of all bookings' })
   async findAllPublic(@Query() query: BookingQueryDto) {
     return this.bookingsService.findAll(query);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update booking status (Public - for demo admin)' })
+  @ApiResponse({ status: 200, description: 'Booking status updated' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+  ) {
+    return this.bookingsService.updateStatusAdmin(id, body.status);
   }
 
   @Post()

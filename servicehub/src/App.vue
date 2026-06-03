@@ -324,9 +324,20 @@ async function addBlock(payload) {
   }
 }
 
-function updateStatus({ id, status }) {
-  const request = requests.value.find(item => item.id === id)
-  if (request) request.status = status
+async function updateStatus({ id, status }) {
+  console.log('[v0] updateStatus called:', id, status)
+  try {
+    // Call API to persist the status change
+    await adminApi.updateBookingStatus(id, status)
+    console.log('[v0] Status updated in database')
+    
+    // Update local state
+    const request = requests.value.find(item => item.id === id)
+    if (request) request.status = status
+  } catch (err) {
+    console.error('[v0] Error updating status:', err)
+    alert('Failed to update status. Please try again.')
+  }
 }
 </script>
 
