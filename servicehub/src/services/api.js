@@ -139,6 +139,12 @@ export const bookingsApi = {
     return response.data
   },
   
+  // Get all bookings (admin - public endpoint for demo)
+  getAll: async () => {
+    const response = await api.get('/bookings/all')
+    return response.data
+  },
+  
   // Get customer's bookings
   getMyBookings: async () => {
     const response = await api.get('/bookings/my-bookings')

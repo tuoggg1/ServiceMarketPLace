@@ -68,11 +68,15 @@ onMounted(async () => {
 
 // Fetch user's bookings, reviews, reports from API
 async function fetchUserData() {
+  console.log('[v0] fetchUserData called, userRole:', userRole.value)
   try {
     if (userRole.value === 'admin') {
       // Fetch all bookings for admin dashboard
+      // Use bookingsApi.getAll which doesn't require admin auth
       try {
-        const bookingsData = await adminApi.getAllBookings()
+        console.log('[v0] Fetching all bookings for admin...')
+        const bookingsData = await bookingsApi.getAll()
+        console.log('[v0] Admin bookings received:', bookingsData)
         
         // Transform bookings data to match admin dashboard format
         requests.value = bookingsData.map(booking => ({
@@ -85,8 +89,9 @@ async function fetchUserData() {
           status: capitalizeStatus(booking.status),
           createdAt: booking.createdAt
         }))
+        console.log('[v0] Transformed requests:', requests.value)
       } catch (err) {
-        console.error('Error fetching admin bookings:', err)
+        console.error('[v0] Error fetching admin bookings:', err)
         requests.value = []
       }
     } else {

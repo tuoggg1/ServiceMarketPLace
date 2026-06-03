@@ -30,6 +30,13 @@ export class BookingsController {
     return this.bookingsService.findAll(query);
   }
 
+  @Get('all')
+  @ApiOperation({ summary: 'Get all bookings (Public - for demo admin dashboard)' })
+  @ApiResponse({ status: 200, description: 'List of all bookings' })
+  async findAllPublic(@Query() query: BookingQueryDto) {
+    return this.bookingsService.findAll(query);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, CustomerGuard)
   @ApiBearerAuth('JWT-auth')
