@@ -285,7 +285,7 @@ async function refreshAdminAccounts() {
       phone: p.phone,
       area: 'Rajshahi City',
       serviceType: 'General service',
-      status: p.isVerified ? 'active' : 'pending-admin-approval'
+      status: !p.isActive ? 'blocked' : (p.isVerified ? 'active' : 'pending-admin-approval')
     }))
     accounts.value = [...customerAccounts, ...providerAccounts]
   } catch (err) {
@@ -467,6 +467,30 @@ async function assignRequest({ requestId }) {
     alert(err.message || 'Could not assign request.')
   }
 }
+async function activateProvider(providerId) {
+  try {
+    await api.activateUser('provider', providerId)
+    await refreshAdminAccounts()
+  } catch (err) {
+    alert(err.message || 'Could not unblock provider.')
+  }
+}
+async function blockCustomer(customerId) {
+  try {
+    await api.suspendUser('customer', customerId, 'Blocked by admin')
+    await refreshAdminAccounts()
+  } catch (err) {
+    alert(err.message || 'Could not block customer.')
+  }
+}
+async function activateCustomer(customerId) {
+  try {
+    await api.activateUser('customer', customerId)
+    await refreshAdminAccounts()
+  } catch (err) {
+    alert(err.message || 'Could not unblock customer.')
+  }
+}
 
 // ---------- Provider actions ----------
 
@@ -610,6 +634,9 @@ function resetLocalDemo() {
         @go-home="goTo('home')"
         @approve-provider="approveProvider"
         @reject-provider="rejectProvider"
+        @activate-provider="activateProvider"
+        @block-customer="blockCustomer"
+        @activate-customer="activateCustomer"
         @assign-request="assignRequest"
         @approve-chat="approveChat"
         @reject-chat="rejectChat"
