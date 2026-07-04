@@ -79,6 +79,20 @@ const SERVICE_PRESENTATION = {
 }
 const DEFAULT_SERVICE_IMAGE = 'https://images.unsplash.com/photo-1581578731548-c64695cc6952'
 
+// The original catalog order from the finalized frontend, so the homepage
+// looks the same regardless of what order the backend returns rows in.
+const SERVICE_DISPLAY_ORDER = [
+  'home cleaning',
+  'moving help',
+  'local delivery',
+  'tech support',
+  'ac repair',
+  'electrician',
+  'plumbing help',
+  'home tutoring',
+  'elder care visit'
+]
+
 // Backend `services.icon` -> the category label the mock data used to group by.
 const ICON_CATEGORY_MAP = {
   home: 'Home',
@@ -183,7 +197,13 @@ async function loadServices() {
         upfrontPayment: presentation.upfrontPayment || null
       }
     }))
-    services.value = withPricing
+
+    // Only show the original 9 services, in the original order, so the
+    // homepage matches the finalized frontend regardless of any extra
+    // categories that might exist in the database.
+    services.value = SERVICE_DISPLAY_ORDER
+      .map(name => withPricing.find(s => s.title.toLowerCase() === name))
+      .filter(Boolean)
   } catch (err) {
     console.warn('Could not load services catalog:', err.message)
   }
