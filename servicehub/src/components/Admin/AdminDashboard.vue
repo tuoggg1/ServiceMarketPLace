@@ -222,7 +222,9 @@ function assignProvider(request) {
                       :class="String(request.status).toLowerCase().replaceAll('_', '-').replaceAll(' ', '-')">{{
                       formatStatus(request.status) }}</span></td>
                   <td>
-                    <div class="row-actions"><select v-model="selectedProviders[request.id]">
+                    <div class="row-actions"><select
+                        :value="selectedProviders[request.id] ?? request.providerId ?? ''"
+                        @change="selectedProviders[request.id] = $event.target.value">
                         <option value="">Choose provider</option>
                         <option v-for="provider in activeProviders" :key="provider.id" :value="provider.id">{{
                           provider.name }} - {{ provider.serviceType }}</option>
