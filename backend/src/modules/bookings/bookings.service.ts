@@ -54,6 +54,7 @@ export class BookingsService {
     booking.totalAmount = totalAmount;
     booking.status = BookingStatus.PENDING;
     booking.jobId = dto.serviceId || null;
+    booking.serviceName = providerService?.service?.serviceName || dto.serviceName || null;
 
     const savedBooking = await this.bookingRepository.save(booking);
 

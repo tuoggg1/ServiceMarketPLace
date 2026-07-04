@@ -36,6 +36,9 @@ export class Booking {
   @Column({ name: 'job_id', type: 'varchar', length: 36, nullable: true })
   jobId: string | null;
 
+  @Column({ name: 'service_name', type: 'varchar', length: 255, nullable: true })
+  serviceName: string | null;
+
   @Column({ name: 'payment_id', type: 'varchar', length: 36, nullable: true })
   paymentId: string | null;
 

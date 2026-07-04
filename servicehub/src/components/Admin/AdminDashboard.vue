@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { formatStatus } from '../../data/services'
 
 const props = defineProps({
   accounts: { type: Array, default: () => [] },
@@ -125,7 +126,7 @@ function assignProvider(request) {
               </thead>
               <tbody>
                 <tr v-for="account in customerAccounts" :key="account.id">
-                  <td><strong>{{ account.name }}</strong><small>real customer account</small></td>
+                  <td><strong>{{ account.name }}</strong></td>
                   <td>{{ account.email }}<small>{{ account.phone }}</small></td>
                   <td>{{requests.filter(r => r.customerId === account.id).length}}</td>
                   <td>{{requests.filter(r => r.customerId === account.id).reduce((sum, r) => sum + Number(r.budget || 0), 0).toLocaleString()}}৳</td>
@@ -211,7 +212,7 @@ function assignProvider(request) {
                   <td><strong>{{ request.id }}</strong></td>
                   <td>{{ request.serviceTitle }}</td>
                   <td>{{ request.customerName }}</td>
-                  <td>{{ providerName(request.providerId) }}<small>{{ request.providerStatus }}</small></td>
+                  <td>{{ providerName(request.providerId) }}<small>{{ formatStatus(request.providerStatus) }}</small></td>
                   <td>{{ request.preferredDate }}<small>{{ request.location }}</small></td>
                   <td>{{ request.budget || 0 }}৳</td>
                   <td><span class="status-pill" :class="request.needsUpfrontPayment ? 'pending' : 'active'">{{
@@ -219,7 +220,7 @@ function assignProvider(request) {
                       v-if="request.needsUpfrontPayment">{{ request.bankName }} · {{ request.accountName }}</small></td>
                   <td><span class="status-pill"
                       :class="String(request.status).toLowerCase().replaceAll('_', '-').replaceAll(' ', '-')">{{
-                      request.status }}</span></td>
+                      formatStatus(request.status) }}</span></td>
                   <td>
                     <div class="row-actions"><select v-model="selectedProviders[request.id]">
                         <option value="">Choose provider</option>

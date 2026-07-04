@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
+import { formatStatus } from '../../data/services'
 
 const props = defineProps({
   currentUser: { type: Object, default: null },
@@ -198,7 +199,7 @@ function requestCustomerBlock() {
                   request.bankName }} · {{ request.accountName }}</small>
             </div><strong>৳{{ request.budget }}</strong><span class="status-pill"
               :class="String(request.providerStatus || request.status).toLowerCase().replaceAll(' ', '-').replaceAll('_', '-')">{{
-                request.providerStatus || request.status }}</span>
+                formatStatus(request.providerStatus || request.status) }}</span>
             <div class="row-actions"><button v-if="request.providerStatus === 'waiting-provider-acceptance'"
                 class="secondary small" @click="openDeclineModal(request)">Decline</button><button
                 v-if="request.providerStatus === 'waiting-provider-acceptance'" class="primary small"
