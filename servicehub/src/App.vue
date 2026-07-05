@@ -81,6 +81,18 @@ const DEFAULT_SERVICE_IMAGE = 'https://images.unsplash.com/photo-1581578731548-c
 
 // The original catalog order from the finalized frontend, so the homepage
 // looks the same regardless of what order the backend returns rows in.
+// ProviderRegisterPage's "Service type" dropdown uses its own labels that
+// don't exactly match the service catalog's names (e.g. "Tutoring" vs.
+// "Home Tutoring"), so map them before looking up a catalog match.
+const PROVIDER_SERVICE_TYPE_MAP = {
+  'ac repair & home maintenance': 'ac repair',
+  'home cleaning': 'home cleaning',
+  'moving help': 'moving help',
+  'delivery service': 'local delivery',
+  'technology support': 'tech support',
+  'tutoring': 'home tutoring'
+}
+
 const SERVICE_DISPLAY_ORDER = [
   'home cleaning',
   'moving help',
@@ -140,6 +152,8 @@ const accounts = ref([])
 const chatApprovals = ref(savedChats)
 const messages = ref(savedMessages)
 const blockRequests = ref([])
+const providerServices = ref([])
+const providerReviews = ref([])
 
 document.documentElement.dataset.theme = theme.value
 
@@ -336,6 +350,39 @@ async function refreshAdminReports() {
   }
 }
 
+async function refreshProviderServices() {
+  if (signedInUser.value?.role !== 'provider') return
+  try {
+    const raw = await api.getMyProviderServices()
+    providerServices.value = raw.map(ps => ({
+      id: ps.id,
+      serviceId: ps.serviceId,
+      title: ps.service?.serviceName || 'Service',
+      price: Number(ps.price || 0),
+      description: ps.description || '',
+      active: ps.isAvailable
+    }))
+  } catch (err) {
+    console.warn('Could not load provider services:', err.message)
+  }
+}
+
+async function refreshProviderReviews() {
+  if (signedInUser.value?.role !== 'provider') return
+  try {
+    const raw = await api.getProviderReviews(signedInUser.value.id)
+    providerReviews.value = raw.map(r => ({
+      id: r.reviewId,
+      name: r.customer?.name || 'Customer',
+      service: r.booking?.providerService?.service?.serviceName || 'Service',
+      rating: r.rating,
+      text: r.comment || ''
+    }))
+  } catch (err) {
+    console.warn('Could not load reviews:', err.message)
+  }
+}
+
 async function applySession(res, userType) {
   api.setTokens(res.accessToken, res.refreshToken)
   signedInUser.value = normalizeUser(res.user, userType)
@@ -344,6 +391,10 @@ async function applySession(res, userType) {
   if (userType === 'admin') {
     await refreshAdminAccounts()
     await refreshAdminReports()
+  }
+  if (userType === 'provider') {
+    await refreshProviderServices()
+    await refreshProviderReviews()
   }
 }
 
@@ -354,6 +405,10 @@ onMounted(async () => {
     if (signedInUser.value.role === 'admin') {
       await refreshAdminAccounts()
       await refreshAdminReports()
+    }
+    if (signedInUser.value.role === 'provider') {
+      await refreshProviderServices()
+      await refreshProviderReviews()
     }
   }
 })
@@ -389,7 +444,9 @@ async function createProvider(provider) {
     })
     await applySession(res, 'provider')
 
-    const match = services.value.find(s => s.title.toLowerCase() === String(provider.serviceType || '').toLowerCase())
+    const rawType = String(provider.serviceType || '').toLowerCase()
+    const normalizedType = PROVIDER_SERVICE_TYPE_MAP[rawType] || rawType
+    const match = services.value.find(s => s.title.toLowerCase() === normalizedType)
     if (match) {
       try {
         await api.addProviderService({
@@ -397,6 +454,7 @@ async function createProvider(provider) {
           price: match.price || 500,
           description: `${provider.serviceType} offered in ${provider.suburb || 'Rajshahi City'}`
         })
+        await refreshProviderServices()
       } catch (err) {
         console.warn('Could not attach default service offering:', err.message)
       }
@@ -539,6 +597,22 @@ async function changeRequestStatus({ requestId, status }) {
     alert(err.message || 'Could not update request status.')
   }
 }
+async function addProviderServiceOffering({ serviceId, price, description }) {
+  try {
+    await api.addProviderService({ serviceId, price: Number(price), description })
+    await refreshProviderServices()
+  } catch (err) {
+    alert(err.message || 'Could not add service.')
+  }
+}
+async function toggleProviderService({ id, active }) {
+  try {
+    await api.updateProviderService(id, { isAvailable: active })
+    await refreshProviderServices()
+  } catch (err) {
+    alert(err.message || 'Could not update service.')
+  }
+}
 
 // ---------- Chat (kept as a local-only demo; no backend module exists for it) ----------
 
@@ -631,6 +705,9 @@ function resetLocalDemo() {
         :chat-approvals="chatApprovals"
         :messages="messages"
         :theme="theme"
+        :provider-services="providerServices"
+        :available-services="services"
+        :reviews="providerReviews"
         @toggle-theme="toggleTheme"
         @sign-out="signOut"
         @go-home="goTo('home')"
@@ -640,6 +717,8 @@ function resetLocalDemo() {
         @request-chat="requestChat"
         @send-message="sendMessage"
         @block-request="createBlockRequest"
+        @add-service="addProviderServiceOffering"
+        @toggle-service="toggleProviderService"
       />
 
       <AdminDashboard

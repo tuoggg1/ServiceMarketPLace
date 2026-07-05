@@ -83,6 +83,10 @@ export async function getMyProviderServices() {
   return request('/providers/me/services', { auth: true })
 }
 
+export async function updateProviderService(providerServiceId, payload) {
+  return request(`/providers/me/services/${providerServiceId}`, { method: 'PUT', body: payload, auth: true })
+}
+
 export async function getProviderBookings() {
   return request('/providers/me/bookings', { auth: true })
 }
@@ -112,6 +116,12 @@ export async function getAllBookingsPublic() {
 
 export async function updateBookingStatusPublic(bookingId, status) {
   return request(`/bookings/${bookingId}/status`, { method: 'PATCH', body: { status } })
+}
+
+// ---------- Reviews ----------
+
+export async function getProviderReviews(providerId) {
+  return request(`/reviews/provider/${providerId}`)
 }
 
 // ---------- Admin ----------
